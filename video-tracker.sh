@@ -11,14 +11,15 @@ DATABASE="${COLMAP}/database.db"
 THREADS="$(grep -c ^processor /proc/cpuinfo)"
 
 # Create output directories
-echo "Setting up project directory...\n"
+printf "Setting up project directory...\n"
 mkdir "${OUTPUT}"
 mkdir "${COLMAP}"
 mkdir "${IMAGES}"
 mkdir "${SPARSE}"
 
 # Options
-read -sp "Feature matching:\n[1]: Sequential\n[2]: Exhaustive\n" feature_matching
+printf "Feature matching:\n[1]: Sequential\n[2]: Exhaustive\n"
+read feature_matching
 
 # Extract frames
 ffmpeg -stats -i "${FILENAME}" -qscale:v 2 "${IMAGES}/frame_%06d.jpg"
@@ -31,7 +32,7 @@ if [ $feature_matching == "1" ]; then
 elif [ $feature_matching == "2" ]; then
     colmap exhaustive_matcher --database_path "${DATABASE}"
 else
-    echo "Invalid argument. Defaulting to exhaustive matching"
+    printf "Invalid argument. Defaulting to exhaustive matching\n"
     colmap exhaustive_matcher --database_path "${DATABASE}"
 fi
 
