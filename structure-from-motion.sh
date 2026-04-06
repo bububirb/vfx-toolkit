@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # Initialize variables
-FILENAME="${1}"
-DIR=$(echo "$FILENAME" | cut -f 1 -d '.')
+PASSED=$1
+DIR="$PASSED"
+
 OUTPUT=${PWD}/${DIR}
 COLMAP="${OUTPUT}/colmap"
 IMAGES="${COLMAP}/images"
@@ -10,19 +11,29 @@ SPARSE="${COLMAP}/sparse"
 DATABASE="${COLMAP}/database.db"
 THREADS="$(grep -c ^processor /proc/cpuinfo)"
 
+
 # Create output directories
 printf "Setting up project directory...\n"
-mkdir "${OUTPUT}"
 mkdir "${COLMAP}"
-mkdir "${IMAGES}"
 mkdir "${SPARSE}"
+
+if [[ -d $PASSED ]]; then
+    printf "Passed argument is a directory, tracking image sequence...\n"
+    IMAGES=$DIR
+elif [[ -f $PASSED ]]; then
+    # Extract frames
+    printf "Passed argument is a file, extracting images...\n"
+    mkdir "${OUTPUT}"
+    mkdir "${IMAGES}"
+    ffmpeg -stats -i "${FILENAME}" -qscale:v 2 "${IMAGES}/frame_%06d.jpg"
+    DIR=$(echo "$PASSED" | cut -f 1 -d '.')
+else
+    printf "Passed argument is not a file or directory"
+fi
 
 # Options
 printf "Feature matching:\n[1]: Sequential\n[2]: Exhaustive\n"
 read feature_matching
-
-# Extract frames
-ffmpeg -stats -i "${FILENAME}" -qscale:v 2 "${IMAGES}/frame_%06d.jpg"
 
 # Track sequence
 colmap feature_extractor --database_path "${DATABASE}" --image_path "${IMAGES}" --ImageReader.single_camera 1
